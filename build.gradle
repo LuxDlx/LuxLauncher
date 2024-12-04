@@ -1,0 +1,41 @@
+tasks.register('build') {
+    dependsOn buildLauncher, buildInstaller
+}
+
+tasks.register('clean', Delete) {
+    delete 'build'
+    delete "dist"
+    delete "main.spec"
+}
+
+tasks.register('buildLauncher') {
+    doLast {
+        // Create the build directory if it doesn't exist
+        def buildDir = file('build')
+        if (!buildDir.exists()) {
+            buildDir.mkdirs()
+        }
+
+        // Prompt user and wait for input
+        println "\nPlease make sure you manually build the launcher and place it in the build directory as LuxLauncher.exe"
+        println "Press Enter to continue..."
+        System.in.read()
+    }
+}
+
+tasks.register('buildInstaller', Exec) {
+    dependsOn buildLauncher  // This ensures buildLauncher runs first
+
+    workingDir '.'
+    commandLine 'pyinstaller', 
+                '--noconfirm', 
+                '--onefile', 
+                '--windowed', 
+                '--icon', './launcher/icon.ico', 
+                '--add-data', './launcher/icon.ico;.', 
+                '--add-data', './build/LuxLauncher.exe;.', 
+                './installer/main.py'
+    
+    // Declare outputs to help Gradle determine if the task is up-to-date
+    outputs.file('./dist/main.exe')  // Adjust this path if your output location is different
+}
